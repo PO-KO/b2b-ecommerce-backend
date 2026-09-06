@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity.js';
 import { Repository } from 'typeorm';
@@ -30,7 +34,7 @@ export class UsersService {
     return user;
   }
 
-  async findUserById(userId: string) {
+  async findUserById(userId: string, withRefreshToken: boolean = false) {
     const user = await this.userRepo.findOne({
       where: { id: userId },
       select: {
@@ -39,9 +43,21 @@ export class UsersService {
         email: true,
         createdAt: true,
         updatedAt: true,
+        refreshToken: withRefreshToken,
       },
     });
 
+    if (!user) throw new NotFoundException('User not found');
+
     return user;
+  }
+
+  async updateRefreshToken(userId: string, hashedRefreshToken: string | null) {
+    return await this.userRepo.update(
+      { id: userId },
+      {
+        refreshToken: hashedRefreshToken,
+      },
+    );
   }
 }

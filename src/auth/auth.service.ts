@@ -1,6 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service.js';
 import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { AuthJwtPayload, UserAuthData } from './types/auth-jwtPayload.js';
 import refreshJwtConfig from './config/refresh-jwt.config.js';
@@ -29,24 +30,50 @@ export class AuthService {
     return { userId: user.id };
   }
 
-  login(userAuthData: UserAuthData) {
-    const payload: AuthJwtPayload = {
-      sub: userAuthData,
-    };
+  async login(userAuthData: UserAuthData) {
+    const [accessToken, refreshToken] = await this.generateTokens(userAuthData);
 
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, this.refreshConfig);
-
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userService.updateRefreshToken(
+      userAuthData.userId,
+      hashedRefreshToken,
+    );
     return { id: userAuthData.userId, accessToken, refreshToken };
   }
 
-  refreshToken(userAuthData: UserAuthData) {
+  async refreshToken(userAuthData: UserAuthData) {
+    const [accessToken, refreshToken] = await this.generateTokens(userAuthData);
+
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userService.updateRefreshToken(
+      userAuthData.userId,
+      hashedRefreshToken,
+    );
+    return { id: userAuthData.userId, accessToken, refreshToken };
+  }
+
+  async generateTokens(userAuthData: UserAuthData) {
     const payload: AuthJwtPayload = {
       sub: userAuthData,
     };
+    return await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, this.refreshConfig),
+    ]);
+  }
 
-    const accessToken = this.jwtService.sign(payload);
+  async validateRefreshToken(userId: string, refreshToken: string) {
+    const user = await this.userService.findUserById(userId, true);
 
-    return { id: userAuthData.userId, accessToken };
+    if (!user.refreshToken)
+      throw new UnauthorizedException('Invalid refresh token');
+
+    return await argon2.verify(user.refreshToken, refreshToken);
+  }
+
+  async logout(userId: string) {
+    await this.userService.updateRefreshToken(userId, null);
+
+    return userId;
   }
 }

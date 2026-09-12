@@ -7,14 +7,18 @@ import { LocalStrategy } from './strategies/local.strategy.js';
 import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './config/jwt.config.js';
 import { ConfigModule } from '@nestjs/config';
-import { JwtStrategy } from './strategies/jwt.stratgey.js';
+import { JwtStrategy } from './strategies/jwt.strategy.js';
 import refreshJwtConfig from './config/refresh-jwt.config.js';
 import { RefreshStrategy } from './strategies/refresh-jwt.strategy.js';
+import { CompaniesModule } from '../companies/companies.module.js';
+import { MembershipsModule } from '../memberships/memberships.module.js';
 
 @Module({
   imports: [
-    UsersModule,
     PassportModule,
+    UsersModule,
+    CompaniesModule,
+    MembershipsModule,
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(refreshJwtConfig),

@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity.js';
-import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/user.dto.js';
+import { EntityManager, Repository } from 'typeorm';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { toUserResponse } from './mappers/user-response.mapper.js';
 
 @Injectable()
 export class UsersService {
@@ -14,19 +15,23 @@ export class UsersService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  async create(newUser: CreateUserDto) {
-    const existingUser = await this.userRepo.findOneBy({
+  async create(newUser: CreateUserDto, entityManager?: EntityManager) {
+    const repository = entityManager
+      ? entityManager.getRepository(User)
+      : this.userRepo;
+
+    const existingUser = await repository.findOneBy({
       email: newUser.email,
     });
 
     if (existingUser) throw new ConflictException('Email already exist');
 
-    const user = this.userRepo.create(newUser);
+    const user = repository.create(newUser);
 
-    return await this.userRepo.save(user);
+    return await repository.save(user);
   }
 
-  async findUserByEmail(email: string) {
+  async findByEmail(email: string) {
     const user = await this.userRepo.findOneBy({
       email: email,
     });
@@ -34,26 +39,40 @@ export class UsersService {
     return user;
   }
 
-  async findUserById(userId: string, withRefreshToken: boolean = false) {
-    const user = await this.userRepo.findOne({
-      where: { id: userId },
-      select: {
-        firstName: true,
-        lastName: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true,
-        refreshToken: withRefreshToken,
-      },
-    });
+  async findByEmailOrFail(email: string) {
+    const user = await this.findByEmail(email);
 
     if (!user) throw new NotFoundException('User not found');
+
+    return toUserResponse(user);
+  }
+
+  async findById(userId: string) {
+    const user = this.userRepo.findOne({
+      where: { id: userId },
+    });
 
     return user;
   }
 
-  async updateRefreshToken(userId: string, hashedRefreshToken: string | null) {
-    return await this.userRepo.update(
+  async findByIdOrFail(userId: string) {
+    const user = await this.findById(userId);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return toUserResponse(user);
+  }
+
+  async updateRefreshToken(
+    userId: string,
+    hashedRefreshToken: string | null,
+    entityManager?: EntityManager,
+  ) {
+    const repository = entityManager
+      ? entityManager.getRepository(User)
+      : this.userRepo;
+
+    return await repository.update(
       { id: userId },
       {
         refreshToken: hashedRefreshToken,

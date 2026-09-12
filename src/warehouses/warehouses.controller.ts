@@ -1,28 +1,28 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
-  Get,
-  Param,
-  ParseUUIDPipe,
   Patch,
+  Param,
   Delete,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service.js';
-import { CreateCategoryDto } from './dto/create-category.dto.js';
-import { UpdateCategoryDto } from './dto/update-category.dto.js';
-import { Roles } from '../auth/decorators/roles.decorator.js';
-import { MembershipRole } from '../memberships/enums/membership-role.enum.js';
+import { WarehousesService } from './warehouses.service.js';
+import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
+import { ApiSecurity } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard.js';
 import { CompanyAuthGuard } from '../auth/guards/company-auth/company-auth.guard.js';
 import { RolesAuthGuard } from '../auth/guards/roles-auth/roles-auth.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { MembershipRole } from '../memberships/enums/membership-role.enum.js';
 import { ActiveCompany } from '../auth/decorators/active-company.decorator.js';
-import { ApiSecurity } from '@nestjs/swagger';
 
-@Controller('categories')
-export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+@Controller('warehouses')
+export class WarehousesController {
+  constructor(private readonly warehousesService: WarehousesService) {}
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
@@ -30,56 +30,44 @@ export class CategoriesController {
   @Post()
   async create(
     @ActiveCompany() companyId: string,
-    @Body() dto: CreateCategoryDto,
+    @Body() dto: CreateWarehouseDto,
   ) {
-    const category = await this.categoriesService.createOrFail(dto, companyId);
+    const warehouse = await this.warehousesService.createOrFail(companyId, dto);
 
     return {
       success: true,
-      category,
+      warehouse,
     };
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get()
-  @ApiSecurity('bearer')
   async findAll(@ActiveCompany() companyId: string) {
-    const categories =
-      await this.categoriesService.findAllByCompanyOrFail(companyId);
+    const warehouses =
+      await this.warehousesService.findAllByCompanyOrFail(companyId);
 
     return {
       success: true,
-      categories,
+      warehouses,
     };
   }
 
-  @UseGuards(JwtAuthGuard, CompanyAuthGuard)
-  @ApiSecurity('bearer')
-  @Get('tree')
-  async findTree(@ActiveCompany() companyId: string) {
-    const categories =
-      await this.categoriesService.findTreeByCompany(companyId);
-
-    return {
-      success: true,
-      categories,
-    };
-  }
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
   @ApiSecurity('bearer')
   @Get(':id')
-  async findOneById(
-    @ActiveCompany() companyId: string,
+  async findOne(
     @Param('id', ParseUUIDPipe) id: string,
+    @ActiveCompany() companyId: string,
   ) {
-    const category = await this.categoriesService.findOneByIdAndCompanyOrFail(
+    const warehouse = await this.warehousesService.findOneByIdAndCompanyOrFail(
       id,
       companyId,
     );
 
     return {
       success: true,
-      category,
+      warehouse,
     };
   }
 
@@ -88,15 +76,20 @@ export class CategoriesController {
   @ApiSecurity('bearer')
   @Patch(':id')
   async update(
-    @ActiveCompany() companyId: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateCategoryDto,
+    @ActiveCompany() companyId: string,
+    @Body() dto: UpdateWarehouseDto,
   ) {
-    await this.categoriesService.update(id, companyId, dto);
+    const warehouse = await this.warehousesService.updateOrFail(
+      id,
+      companyId,
+      dto,
+    );
 
     return {
       success: true,
-      message: `Category with ID = ${id} updated successfully`,
+      warehouse,
+      message: 'Warehouse updated successfully',
     };
   }
 
@@ -104,15 +97,15 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
   @ApiSecurity('bearer')
   @Delete(':id')
-  async delete(
+  async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @ActiveCompany() companyId: string,
   ) {
-    const deletedId = await this.categoriesService.removeOrFail(id, companyId);
+    await this.warehousesService.removeOrFail(id, companyId);
 
     return {
       success: true,
-      message: `Category with ID = ${id} deleted successfully`,
+      message: `Warehouse with ID = ${id} deleted successfully`,
     };
   }
 }

@@ -6,6 +6,7 @@ export const toProductResponseDto = (product: Product): ProductResponseDto => ({
   id: product.id,
   name: product.name,
   description: product.description,
+  sku: product.sku,
   price: centsToPrice(product.priceInCents),
   isActive: product.isActive,
   categoryId: product.categoryId,

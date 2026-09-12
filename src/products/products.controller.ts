@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth/jwt-auth.guard.js';
 import { CompanyAuthGuard } from '../auth/guards/company-auth/company-auth.guard.js';
 import { RolesAuthGuard } from '../auth/guards/roles-auth/roles-auth.guard.js';
 import { ActiveCompany } from '../auth/decorators/active-company.decorator.js';
+import { ApiSecurity } from '@nestjs/swagger';
 
 @Controller('products')
 export class ProductsController {
@@ -25,6 +26,7 @@ export class ProductsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Post()
   async create(
     @ActiveCompany() companyId: string,
@@ -39,6 +41,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get()
   async findAll(@ActiveCompany() companyId: string) {
     const products =
@@ -50,6 +53,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get(':id')
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
@@ -67,6 +71,7 @@ export class ProductsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -83,6 +88,7 @@ export class ProductsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Delete(':id')
   async remove(
     @Param('id', ParseUUIDPipe) id: string,

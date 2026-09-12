@@ -10,7 +10,6 @@ import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity.js';
 import { CategoriesService } from '../categories/categories.service.js';
 import { toProductResponseDto } from './mappers/response-product.mapper.js';
-import { PRICE_UNIT } from '../constants/roles.constants.js';
 import { priceToCents } from './helpers/index.js';
 
 @Injectable()
@@ -66,7 +65,16 @@ export class ProductsService {
     );
 
     if (productExistence)
-      throw new ConflictException('Product name already exist');
+      throw new ConflictException(
+        'A product with this name already exists in your company',
+      );
+
+    const skuExistence = await this.findBySkuAndCompany(dto.sku, companyId);
+
+    if (skuExistence)
+      throw new ConflictException(
+        'A product with this SKU already exists in your company',
+      );
 
     const category = await this.categoriesService.findOneByIdAndCompany(
       dto.categoryId,
@@ -76,8 +84,6 @@ export class ProductsService {
     if (!category) throw new NotFoundException('Category not found');
 
     const newProduct = await this.create(dto, companyId);
-
-    console.log({ newProduct });
 
     return toProductResponseDto(newProduct);
   }
@@ -118,10 +124,13 @@ export class ProductsService {
     if (dto.description && dto.description !== product.description)
       product.description = dto.description;
 
-    if (dto.sku) {
+    if (dto.sku && dto.sku !== product.sku) {
       const skuExistence = await this.findBySkuAndCompany(dto.sku, companyId);
 
-      if (skuExistence) throw new ConflictException('Sku already exist');
+      if (skuExistence)
+        throw new ConflictException(
+          'A product with this SKU already exists in your company',
+        );
 
       product.sku = dto.sku;
     }

@@ -3,6 +3,7 @@ import { BaseEntity } from '../../helpers/base.entity.js';
 import { Membership } from '../../memberships/entities/membership.entity.js';
 import { Category } from '../../categories/entities/category.entity.js';
 import { Product } from '../../products/entities/product.entity.js';
+import { Warehouse } from '../../warehouses/entities/warehouse.entity.js';
 
 @Entity('companies')
 export class Company extends BaseEntity {
@@ -26,4 +27,7 @@ export class Company extends BaseEntity {
 
   @OneToMany(() => Product, (product) => product.company)
   products: Relation<Product[]>;
+
+  @OneToMany(() => Warehouse, (warehouse) => warehouse.company)
+  warehouses: Relation<Warehouse[]>;
 }

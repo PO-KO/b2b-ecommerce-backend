@@ -9,7 +9,6 @@ import {
 import { BaseEntity } from '../../helpers/base.entity.js';
 import { Company } from '../../companies/entities/company.entity.js';
 import { Category } from '../../categories/entities/category.entity.js';
-import { PRICE_UNIT } from '../../constants/roles.constants.js';
 
 @Unique(['companyId', 'sku'])
 @Entity('products')
@@ -26,7 +25,7 @@ export class Product extends BaseEntity {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ nullable: true })
+  @Column()
   sku: string;
 
   @Column()

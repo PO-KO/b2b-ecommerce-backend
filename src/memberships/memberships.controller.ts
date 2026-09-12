@@ -20,6 +20,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import type { UserAuthData } from '../auth/types/auth-jwtPayload.js';
 import { RemoveMemberDto } from './dto/remove-member.dto.js';
 import { UpdateMemberRoleDto } from './dto/update-member-role.dto.js';
+import { ApiSecurity } from '@nestjs/swagger';
 
 @Controller('/companies/:companyId/memberships')
 export class MembershipsController {
@@ -27,6 +28,7 @@ export class MembershipsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Post()
   async create(
     @Param('companyId') companyId: string,
@@ -47,6 +49,7 @@ export class MembershipsController {
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get()
   async findAllMembers(@Param('companyId', ParseUUIDPipe) companyId: string) {
     const memberships =
@@ -60,6 +63,7 @@ export class MembershipsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Delete()
   async remove(
     @Param('companyId') companyId: string,
@@ -80,6 +84,7 @@ export class MembershipsController {
 
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
   @UseGuards(JwtAuthGuard, CompanyAuthGuard, RolesAuthGuard)
+  @ApiSecurity('bearer')
   @Patch(':userId/role')
   async updateRole(
     @Param('companyId', ParseUUIDPipe) companyId: string,
@@ -101,6 +106,7 @@ export class MembershipsController {
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get('count')
   async countMembersInCompany(@Param('companyId') companyId: string) {
     const count =
@@ -113,6 +119,7 @@ export class MembershipsController {
   }
 
   @UseGuards(JwtAuthGuard, CompanyAuthGuard)
+  @ApiSecurity('bearer')
   @Get(':userId')
   async findMember(
     @Param('companyId', ParseUUIDPipe) companyId: string,

@@ -15,6 +15,9 @@ import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard.js';
 import { JwtAuthGuard } from './guards/jwt-auth/jwt-auth.guard.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
+import { ApiBody, ApiSecurity } from '@nestjs/swagger';
+import { LoginDto } from './dto/login.dto.js';
+import { SelectCompanyDto } from './dto/select-company.dto.js';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +36,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('login')
+  @ApiBody({ type: LoginDto })
   async login(@CurrentUser() user: UserAuthData) {
     const result = await this.authService.login(user);
 
@@ -54,6 +58,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiSecurity('bearer')
   @Post('logout')
   async logout(@CurrentUser() user: UserAuthData) {
     const userId = await this.authService.logout(user.userId);
@@ -64,12 +69,16 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiSecurity('bearer')
   @Post('select-company')
   async selectCompany(
     @CurrentUser() user: UserAuthData,
-    @Body('companyId') companyId: string,
+    @Body() dto: SelectCompanyDto,
   ) {
-    const result = await this.authService.selectCompany(user.userId, companyId);
+    const result = await this.authService.selectCompany(
+      user.userId,
+      dto.companyId,
+    );
     return {
       success: true,
       message: `Company is active`,

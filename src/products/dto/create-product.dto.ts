@@ -1,6 +1,6 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsDecimal,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -12,23 +12,29 @@ import {
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   name: string;
 
   @IsOptional()
+  @ApiPropertyOptional()
   description?: string;
 
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   sku: string;
 
   @IsNumber()
   @Min(0)
+  @ApiProperty()
   price: number;
 
   @IsBoolean()
   @IsOptional()
+  @ApiPropertyOptional()
   isActive?: boolean;
 
   @IsUUID()
+  @ApiProperty()
   categoryId: string;
 }

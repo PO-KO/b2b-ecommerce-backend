@@ -1,6 +1,13 @@
-import { BeforeInsert, Column, Entity } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  OneToMany,
+  type Relation,
+} from 'typeorm';
 import { BaseEntity } from '../../helpers/base.entity.js';
 import * as bcrypt from 'bcrypt';
+import { Membership } from '../../memberships/entities/membership.entity.js';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -15,6 +22,12 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  refreshToken: string | null;
+
+  @OneToMany(() => Membership, (membership) => membership.user)
+  memberships: Relation<Membership[]>;
 
   @BeforeInsert()
   async hashPassword() {
